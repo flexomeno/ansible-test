@@ -1,4 +1,6 @@
 ---
+- import_playbook: retrieve_vault_password.yml
+
 - name: Gather database facts
   hosts: database
   gather_facts: yes
