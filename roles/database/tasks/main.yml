@@ -1,0 +1,46 @@
+---
+- name: Install MySQL
+  yum:
+    name: mariadb-server
+    state: present
+
+- name: Start and enable MariaDB
+  systemd:
+    name: mariadb
+    state: started
+    enabled: true
+
+- name: Secure MariaDB
+  mysql_secure_installation:
+    login_user: root
+    login_password: "{{ db_root_password }}"
+    user: root
+    password: "{{ db_root_password }}"
+    host_all: true
+    no_root_password: false
+    remove_anonymous_user: true
+    disallow_root_login_remotely: true
+    remove_test_db: true
+
+- name: Create database and user
+  mysql_db:
+    name: example_db
+    state: present
+
+- name: Create application user
+  mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: 'example_db.*:ALL'
+    state: present
+
+- name: Populate the database
+  mysql_db:
+    name: example_db
+    state: import
+    target: /tmp/create_database.sql
+
+- name: Copy SQL template
+  template:
+    src: create_database.sql.j2
+    dest: /tmp/create_database.sql

@@ -1,0 +1,30 @@
+from flask import Flask, request, jsonify
+import pymysql.cursors
+
+app = Flask(__name__)
+
+connection = pymysql.connect(
+    host='<DB_INSTANCE_IP>',
+    user='{{ db_user }}',
+    password='{{ db_password }}',
+    database='example_db',
+    cursorclass=pymysql.cursors.DictCursor
+)
+
+@app.route('/people', methods=['GET'])
+def get_people():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM people")
+        result = cursor.fetchall()
+        return jsonify(result)
+
+@app.route('/people', methods=['POST'])
+def add_person():
+    data = request.get_json()
+    with connection.cursor() as cursor:
+        cursor.execute("INSERT INTO people (name, product) VALUES (%s, %s)", (data['name'], data['product']))
+        connection.commit()
+    return '', 204
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

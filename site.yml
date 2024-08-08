@@ -1,0 +1,10 @@
+---
+- name: Provision the database server
+  hosts: database
+  roles:
+    - database
+
+- name: Provision the API server
+  hosts: api
+  roles:
+    - api

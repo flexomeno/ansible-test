@@ -1,0 +1,22 @@
+---
+- name: Install dependencies
+  yum:
+    name: 
+      - python3
+      - python3-pip
+    state: present
+
+- name: Install Flask and MySQL connector
+  pip:
+    name:
+      - flask
+      - pymysql
+
+- name: Deploy API application
+  template:
+    src: app.py.j2
+    dest: /home/ec2-user/app.py
+    mode: 0755
+
+- name: Start API application
+  command: nohup python3 /home/ec2-user/app.py &
