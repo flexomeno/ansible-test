@@ -1,7 +1,7 @@
 ---
 - name: Install MySQL
-  yum:
-    name: mariadb-server
+  dnf:
+    name: mariadb105-server
     state: present
 
 - name: Start and enable MariaDB
@@ -10,22 +10,33 @@
     state: started
     enabled: true
 
-- name: Secure MariaDB
-  mysql_secure_installation:
-    login_user: root
-    login_password: "{{ db_root_password }}"
-    user: root
-    password: "{{ db_root_password }}"
-    host_all: true
-    no_root_password: false
-    remove_anonymous_user: true
-    disallow_root_login_remotely: true
-    remove_test_db: true
+- name: Ensure pip is installed
+  dnf:
+    name: python3-pip
+    state: present
 
-- name: Create database and user
+- name: Install required Python packages
+  pip:
+    name: PyMySQL
+    state: present
+
+- name: Secure MariaDB installation
+  shell: >
+    mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ db_root_password }}';
+    DELETE FROM mysql.user WHERE User='';
+    DROP DATABASE IF EXISTS test;
+    DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+    FLUSH PRIVILEGES;"
+  args:
+    executable: /bin/bash
+  ignore_errors: true
+
+- name: Create database
   mysql_db:
     name: example_db
     state: present
+    login_user: root
+    login_password: "{{ db_root_password }}"
 
 - name: Create application user
   mysql_user:
@@ -33,14 +44,19 @@
     password: "{{ db_password }}"
     priv: 'example_db.*:ALL'
     state: present
+    host: '%'
+    login_user: root
+    login_password: "{{ db_root_password }}"
+
+- name: Copy SQL template
+  template:
+    src: create_database.sql.j2
+    dest: /tmp/create_database.sql
 
 - name: Populate the database
   mysql_db:
     name: example_db
     state: import
     target: /tmp/create_database.sql
-
-- name: Copy SQL template
-  template:
-    src: create_database.sql.j2
-    dest: /tmp/create_database.sql
+    login_user: root
+    login_password: "{{ db_root_password }}"

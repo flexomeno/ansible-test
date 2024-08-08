@@ -4,7 +4,7 @@ import pymysql.cursors
 app = Flask(__name__)
 
 connection = pymysql.connect(
-    host='<DB_INSTANCE_IP>',
+    host='{{ host_db }}',
     user='{{ db_user }}',
     password='{{ db_password }}',
     database='example_db',
