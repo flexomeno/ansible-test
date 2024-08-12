@@ -28,6 +28,3 @@
 
 - name: Start API application
   command: nohup python3 /home/ec2-user/app.py &
-  args:
-    timeout: 5
-  ignore_errors: yes
