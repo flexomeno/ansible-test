@@ -3,6 +3,14 @@
   dnf:
     name: mariadb105-server
     state: present
+  when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution'] == 'Amazon'
+
+- name: Install MariaDB on Ubuntu
+  apt:
+    name: mariadb-server
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == 'Debian' and ansible_facts['distribution'] == 'Ubuntu'
 
 - name: Start and enable MariaDB
   systemd:

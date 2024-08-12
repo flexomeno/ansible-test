@@ -15,21 +15,11 @@
     - database
   become: true
 
-
 - name: Gather database facts
   hosts: database
   tasks:
     - name: Gather facts about the database instance
       setup:
-
-- name: Gather the API server's public IP
-  hosts: api
-  gather_facts: no
-  tasks:
-    - name: Get the public IP of the first API instance
-      set_fact:
-        api_url: "http://{{ hostvars[inventory_hostname]['ansible_facts']['ansible_default_ipv4']['address'] }}:5000"
-      run_once: true
 
 - name: Provision the API server
   hosts: api
@@ -41,6 +31,9 @@
 
 - name: Install frontend
   hosts: frontend
+  gather_facts: yes
   roles:
     - frontend
   become: true
+  vars:
+    api_url: "http://{{ hostvars[groups['api'][0]]['ansible_default_ipv4']['address'] }}:5000"
