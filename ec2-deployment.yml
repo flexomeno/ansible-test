@@ -1,6 +1,3 @@
-~
-~
-"ec2-deployment.yml" 41L, 1473B                                                                                                                                                     31,9          All
 ---
 - name: Desplegar instancias EC2 con tags específicos
   hosts: localhost
