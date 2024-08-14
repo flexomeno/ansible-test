@@ -1,41 +1,44 @@
 ---
+# Playbook que despliega instancias EC2 con tags específicos
+
 - name: Desplegar instancias EC2 con tags específicos
-  hosts: localhost
-  gather_facts: no
+  hosts: localhost  # Ejecuta este playbook localmente en la máquina que corre Ansible
+  gather_facts: no  # No recoge hechos del sistema para ahorrar tiempo
   vars:
-    item_list:
+    item_list:  # Define una lista de diccionarios que contiene las instancias a crear con sus respectivos tags
       - { Name: "ansible_api_db2", Application: "database" }
       - { Name: "ansible_api_api2", Application: "api" }
       - { Name: "ansible_api_frontend2", Application: "frontend" }
-  tasks:
+  
+  tasks:  # Define las tareas que se van a ejecutar
     - name: Verificar si las instancias ya existen
-      amazon.aws.ec2_instance_info:
+      amazon.aws.ec2_instance_info:  # Usa el módulo para obtener información sobre instancias EC2
         filters:
-          "tag:Name": "{{ instance_item.Name }}"
-        region: us-east-1
-      loop: "{{ item_list }}"
-      register: existing_instances
+          "tag:Name": "{{ instance_item.Name }}"  # Filtra instancias basadas en el tag 'Name'
+        region: us-east-1  # Especifica la región de AWS
+      loop: "{{ item_list }}"  # Itera sobre cada elemento en item_list
+      register: existing_instances  # Almacena los resultados de la búsqueda en la variable existing_instances
       loop_control:
-        loop_var: instance_item
+        loop_var: instance_item  # Renombra la variable de bucle a instance_item para usarla dentro de la tarea
 
     - name: Crear las instancias EC2 si no existen
-      amazon.aws.ec2_instance:
-        name: "{{ instance_item.Name }}"
-        key_name: 'ansible-sessions'
-        instance_type: t2.micro
-        image_id: ami-0ae8f15ae66fe8cda  # Reemplaza con la AMI adecuada para tu región
-        region: us-east-1
-        wait: yes
-        vpc_subnet_id: 'subnet-0b124a0cf87f76c10'
-        security_group: 'sg-0ef4f7e055d92acbc'
-        tags:
-          Name: "{{ instance_item.Name }}"
-          Application: "{{ instance_item.Application }}"
-      loop: "{{ existing_instances.results | map(attribute='instances') | map('length') | zip(item_list) | selectattr('0', '==', 0) | map(attribute='1') | list }}"
+      amazon.aws.ec2_instance:  # Usa el módulo para crear instancias EC2
+        name: "{{ instance_item.Name }}"  # Nombre de la instancia basado en el tag 'Name'
+        key_name: 'ansible-sessions'  # Nombre de la clave SSH para acceder a las instancias
+        instance_type: t2.micro  # Tipo de instancia (t2.micro en este caso)
+        image_id: ami-0ae8f15ae66fe8cda  # ID de la imagen AMI para lanzar la instancia, debe ser ajustado según la región
+        region: us-east-1  # Región de AWS
+        wait: yes  # Espera hasta que la instancia esté lista
+        vpc_subnet_id: 'subnet-0b124a0cf87f76c10'  # ID de la subred donde se lanzará la instancia
+        security_group: 'sg-0ef4f7e055d92acbc'  # ID del grupo de seguridad para la instancia
+        tags:  # Asigna los tags a la instancia
+          Name: "{{ instance_item.Name }}"  # Tag 'Name' basado en el valor del diccionario
+          Application: "{{ instance_item.Application }}"  # Tag 'Application' basado en el valor del diccionario
+      loop: "{{ existing_instances.results | map(attribute='instances') | map('length') | zip(item_list) | selectattr('0', '==', 0) | map(attribute='1') | list }}"  # Crea instancias solo si no existen
       loop_control:
-        loop_var: instance_item
-      register: ec2_instances
+        loop_var: instance_item  # Renombra la variable de bucle a instance_item para usarla dentro de la tarea
+      register: ec2_instances  # Registra las instancias creadas o existentes en la variable ec2_instances
 
     - name: Mostrar detalles de las instancias creadas o existentes
       debug:
-        var: ec2_instances
+        var: ec2_instances  # Muestra los detalles de las instancias almacenados en ec2_instances
