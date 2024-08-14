@@ -26,14 +26,16 @@
         security_group: "{{ security_group }}"
         assign_public_ip: yes
         tags:
-          Name: "{{ item.Name }}"
-          Application: "{{ item.Application }}"
-      loop:
-        - { Name: "DatabaseInstance", Application: "database" }
-        - { Name: "APIInstance", Application: "api" }
-        - { Name: "FrontendInstance", Application: "frontend" }
-      when: not existing_instances.results[ansible_loop.index0].instances
-      register: ec2_instances
+          Name: "{{ instance_item.Name }}"
+          Application: "{{ instance_item.Application }}"
+      loop: "{{ existing_instances.results | map(attribute='instances') | map('length') | zip(item_list) | selectattr('0', '==', 0) | map(attribute='1') | list }}"
+      vars:
+        item_list:
+          - { Name: "DatabaseInstance", Application: "database" }
+          - { Name: "APIInstance", Application: "api" }
+          - { Name: "FrontendInstance", Application: "frontend" }
+      loop_control:
+        loop_var: instance_item
 
     - name: Mostrar detalles de las instancias creadas o existentes
       debug:
