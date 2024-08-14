@@ -9,9 +9,9 @@
           "tag:Name": "{{ item.Name }}"
         region: us-east-1
       loop:
-        - { Name: "ansible_api_db" }
-        - { Name: "ansible_api_api" }
-        - { Name: "ansible_api_frontend" }
+        - { Name: "ansible_api_db2" }
+        - { Name: "ansible_api_api2" }
+        - { Name: "ansible_api_frontend2" }
       register: existing_instances
 
     - name: Crear las instancias EC2 si no existen
