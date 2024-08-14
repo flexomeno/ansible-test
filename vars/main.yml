@@ -1,0 +1,4 @@
+---
+key_name: ansible-sessions  # Reemplaza con el nombre de tu clave SSH
+subnet_id: subnet-0b124a0cf87f76c10  # Reemplaza con tu subnet ID
+security_group: sg-0ef4f7e055d92acbc  # Reemplaza con tu security group ID

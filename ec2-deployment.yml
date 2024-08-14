@@ -1,0 +1,40 @@
+---
+- name: Desplegar instancias EC2 con tags específicos
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Verificar si las instancias ya existen
+      amazon.aws.ec2_instance_info:
+        filters:
+          "tag:Name": "{{ item.Name }}"
+        region: us-east-1
+      loop:
+        - { Name: "ansible_api_db" }
+        - { Name: "ansible_api_api" }
+        - { Name: "ansible_api_frontend" }
+      register: existing_instances
+
+    - name: Crear las instancias EC2 si no existen
+      amazon.aws.ec2_instance:
+        name: "{{ item.Name }}"
+        key_name: "{{ key_name }}"
+        instance_type: t2.micro
+        image_id: ami-0ae8f15ae66fe8cda  # Reemplaza con la AMI adecuada para tu región
+        region: us-east-1
+        wait: yes
+        vpc_subnet_id: "{{ subnet_id }}"
+        security_group: "{{ security_group }}"
+        assign_public_ip: yes
+        tags:
+          Name: "{{ item.Name }}"
+          Application: "{{ item.Application }}"
+      loop:
+        - { Name: "DatabaseInstance", Application: "database" }
+        - { Name: "APIInstance", Application: "api" }
+        - { Name: "FrontendInstance", Application: "frontend" }
+      when: not existing_instances.results[ansible_loop.index0].instances
+      register: ec2_instances
+
+    - name: Mostrar detalles de las instancias creadas o existentes
+      debug:
+        var: ec2_instances
