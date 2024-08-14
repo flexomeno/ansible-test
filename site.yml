@@ -1,10 +1,5 @@
 ---
-- name: Desplegar instancias EC2
-  hosts: localhost
-  gather_facts: no
-  tasks:
-    - name: Incluir el playbook para desplegar instancias EC2
-      include_playbook: ec2-deployment.yml
+- import_playbook: ec2-deployment.yml
 
 - name: Gather database facts
   hosts: database
