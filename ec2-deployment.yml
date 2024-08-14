@@ -1,41 +1,43 @@
+~
+~
+"ec2-deployment.yml" 41L, 1473B                                                                                                                                                     31,9          All
 ---
 - name: Desplegar instancias EC2 con tags específicos
   hosts: localhost
   gather_facts: no
+  vars:
+    item_list:
+      - { Name: "ansible_api_db2", Application: "database" }
+      - { Name: "ansible_api_api2", Application: "api" }
+      - { Name: "ansible_api_frontend2", Application: "frontend" }
   tasks:
     - name: Verificar si las instancias ya existen
       amazon.aws.ec2_instance_info:
         filters:
-          "tag:Name": "{{ item.Name }}"
+          "tag:Name": "{{ instance_item.Name }}"
         region: us-east-1
-      loop:
-        - { Name: "ansible_api_db2" }
-        - { Name: "ansible_api_api2" }
-        - { Name: "ansible_api_frontend2" }
+      loop: "{{ item_list }}"
       register: existing_instances
+      loop_control:
+        loop_var: instance_item
 
     - name: Crear las instancias EC2 si no existen
       amazon.aws.ec2_instance:
-        name: "{{ item.Name }}"
-        key_name: "{{ key_name }}"
+        name: "{{ instance_item.Name }}"
+        key_name: 'ansible-sessions'
         instance_type: t2.micro
         image_id: ami-0ae8f15ae66fe8cda  # Reemplaza con la AMI adecuada para tu región
         region: us-east-1
         wait: yes
-        vpc_subnet_id: "{{ subnet_id }}"
-        security_group: "{{ security_group }}"
-        assign_public_ip: yes
+        vpc_subnet_id: 'subnet-0b124a0cf87f76c10'
+        security_group: 'sg-0ef4f7e055d92acbc'
         tags:
           Name: "{{ instance_item.Name }}"
           Application: "{{ instance_item.Application }}"
       loop: "{{ existing_instances.results | map(attribute='instances') | map('length') | zip(item_list) | selectattr('0', '==', 0) | map(attribute='1') | list }}"
-      vars:
-        item_list:
-          - { Name: "DatabaseInstance", Application: "database" }
-          - { Name: "APIInstance", Application: "api" }
-          - { Name: "FrontendInstance", Application: "frontend" }
       loop_control:
         loop_var: instance_item
+      register: ec2_instances
 
     - name: Mostrar detalles de las instancias creadas o existentes
       debug:
