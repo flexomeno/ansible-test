@@ -1,0 +1,4 @@
+---
+collections:
+  - name: amazon.aws
+    version: 3.1.0  # Reemplaza con la última versión disponible
